@@ -266,4 +266,4 @@ task.spawn(function()
     gameStateManager()
 end)
 
-print("Script Has loaded !! ( @rekahhhh on discord btw !!")
+print("Script Has loaded !! ( @rekahhhhh on discord btw !!")
