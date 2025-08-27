@@ -20,19 +20,139 @@ local CONFIG = {
         [16895606055] = true,
         [18637069183] = true
     },
-    
     CullingGamePlaceID = 115509275831248,
-    
     SpecialPlaceID = 14067600077,
-    
     AntiAFKEnabled = true,
     AntiAFKInterval = 120,
     MoveDistance = 0.5,
-    
     ReEntryDelay = 1000,
     GameLoadTime = 25,
 }
 
+-- GUI setup starts here
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Parent = ScreenGui
+
+local mainTab = Instance.new("Frame")
+mainTab.Size = UDim2.new(1, 0, 0.3, 0)
+mainTab.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mainTab.Parent = mainFrame
+
+local settingsTab = Instance.new("Frame")
+settingsTab.Size = UDim2.new(1, 0, 0.7, 0)
+settingsTab.Position = UDim2.new(0, 0, 0.3, 0)
+settingsTab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+settingsTab.Parent = mainFrame
+
+local btnMain = Instance.new("TextButton")
+btnMain.Size = UDim2.new(0.5, 0, 1, 0)
+btnMain.Position = UDim2.new(0, 0, 0, 0)
+btnMain.Text = "Main"
+btnMain.Parent = mainFrame
+
+local btnSettings = Instance.new("TextButton")
+btnSettings.Size = UDim2.new(0.5, 0, 1, 0)
+btnSettings.Position = UDim2.new(0.5, 0, 0, 0)
+btnSettings.Text = "Settings"
+btnSettings.Parent = mainFrame
+
+local function switchTab(tabName)
+    if tabName == "Main" then
+        mainTab.Visible = true
+        settingsTab.Visible = false
+    else
+        mainTab.Visible = false
+        settingsTab.Visible = true
+    end
+    logMessage("Switched to " .. tabName)
+end
+
+btnMain.MouseButton1Click:Connect(function()
+    switchTab("Main")
+end)
+btnSettings.MouseButton1Click:Connect(function()
+    switchTab("Settings")
+end)
+switchTab("Main") -- default start
+
+-- ---------------------------
+-- Logs
+local logs = {}
+local function logMessage(msg)
+    table.insert(logs, msg)
+    local logLabel = Instance.new("TextLabel")
+    logLabel.Size = UDim2.new(1, -4, 0, 20)
+    logLabel.BackgroundTransparency = 1
+    logLabel.Text = msg
+    logLabel.TextColor3 = Color3.new(1, 1, 1)
+    logLabel.TextXAlignment = Enum.TextXAlignment.Left
+    logLabel.TextSize = 14
+    logLabel.Parent = consoleFrame
+    task.wait()
+    local totalHeight = 0
+    for _, child in pairs(consoleFrame:GetChildren()) do
+        if child:IsA("TextLabel") then
+            totalHeight = totalHeight + child.Size.Y.Offset + listLayout.Padding.Offset
+        end
+    end
+    consoleFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+    consoleFrame.CanvasPosition = Vector2.new(0, totalHeight)
+end
+
+-- ---------------------------
+-- Console in Settings tab
+local consoleFrame = Instance.new("ScrollingFrame")
+consoleFrame.Size = UDim2.new(0.9, 0, 0.4, 0)
+consoleFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+consoleFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+consoleFrame.BorderSizePixel = 1
+consoleFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+consoleFrame.ScrollBarThickness = 6
+consoleFrame.Parent = settingsTab
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Parent = consoleFrame
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 2)
+
+-- Initialize logs
+logMessage("Script loaded! (Author: rekahhhh)")
+
+-- ---------------------------
+-- GUI toggles
+local isAntiAFKOn = CONFIG.AntiAFKEnabled
+local antiAFKButton = Instance.new("TextButton")
+antiAFKButton.Size = UDim2.new(0.8, 0, 0, 50)
+antiAFKButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+local function updateAntiAFKButton()
+    if isAntiAFKOn then
+        antiAFKButton.Text = "Anti AFK: ON"
+        antiAFKButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    else
+        antiAFKButton.Text = "Anti AFK: OFF"
+        antiAFKButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    end
+end
+updateAntiAFKButton()
+antiAFKButton.TextSize = 14
+antiAFKButton.TextColor3 = Color3.new(1,1,1)
+antiAFKButton.Parent = mainTab
+antiAFKButton.MouseButton1Click:Connect(function()
+    isAntiAFKOn = not isAntiAFKOn
+    updateAntiAFKButton()
+    logMessage("Anti AFK turned " .. (isAntiAFKOn and "ON" or "OFF"))
+end)
+
+-- Additional toggles can be added similarly...
+
+-- ---------------------------
+-- Functions for game logic
 local function getCurrentPlaceID()
     return game.PlaceId
 end
@@ -64,7 +184,6 @@ local function enterMatchmakingHub()
                         if instance:IsA("TextButton") then
                             text = instance.Text:lower()
                         end
-                        
                         if name:find("matchmaking") or text:find("matchmaking") then
                             pcall(function()
                                 instance:Activate()
@@ -72,7 +191,6 @@ local function enterMatchmakingHub()
                             return true
                         end
                     end
-                    
                     for _, child in ipairs(instance:GetChildren()) do
                         if searchForMatchmakingButton(child) then
                             return true
@@ -81,7 +199,6 @@ local function enterMatchmakingHub()
                 end
                 return false
             end
-            
             searchForMatchmakingButton(playerGui)
         end
     end)
@@ -122,17 +239,12 @@ end
 
 local function enterCullingGames()
     pcall(function()
-        -- Correct remote path and parameters
         local teamRemote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Team")
         if teamRemote and teamRemote:IsA("RemoteEvent") then
             print("Firing Team remote event with correct parameters")
             teamRemote:FireServer("JoinQueue", "CULLING GAMES")
             task.wait(0.1)
-        else
-            print("Remotes.Team not found or not a RemoteEvent")
         end
-
-        -- Find and click GUI button for entering queue
         local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
         if playerGui then
             local function searchForQueueButton(instance)
@@ -144,10 +256,7 @@ local function enterCullingGames()
                             text = instance.Text:lower()
                         end
                         if name:find("queue") or text:find("queue") then
-                            print("Found QUEUE button: " .. instance.Name)
                             if instance.Visible and instance.Active then
-                                print("Button is visible and active, attempting to click...")
-                                -- Try various click methods
                                 pcall(function() instance:Activate() end)
                                 pcall(function() instance.MouseButton1Click:Fire() end)
                                 pcall(function()
@@ -189,11 +298,9 @@ local function antiAFK()
                             0,
                             (math.random() - 0.5) * CONFIG.MoveDistance
                         )
-                        
                         LocalPlayer.Character.Humanoid:Move(moveDirection, true)
                         task.wait(0.2)
                         LocalPlayer.Character.Humanoid:Move(Vector3.new(0, 0, 0), true)
-                        
                         lastMove = now
                     end
                 end
@@ -207,16 +314,15 @@ local function gameStateManager()
     local inCullingPreviously = false
     local statusReportTime = tick()
     local specialAreaHandled = false
-    
     while true do
         task.wait(2)
         pcall(function()
             local now = tick()
             if now - statusReportTime > 300 then
                 print("Type Soul Auto Culling: Still running...")
+                logMessage("Type Soul Auto Culling: Still running...")
                 statusReportTime = now
             end
-            
             if isInSpecialArea() and not specialAreaHandled then
                 enterMatchmakingHub()
                 task.wait(1)
@@ -226,29 +332,27 @@ local function gameStateManager()
             elseif not isInSpecialArea() then
                 specialAreaHandled = false
             end
-            
             if isInMatchmaking() then
                 print("Detected matchmaking area, entering culling games...")
+                logMessage("Detected matchmaking area, entering culling games...")
                 enterCullingGames()
                 lastReEntry = now
             end
-            
             local currentlyInCulling = isInCullingGames()
             if inCullingPreviously and not currentlyInCulling then
                 print("Detected return to matchmaking, re-entering culling games...")
+                logMessage("Detected return to matchmaking, re-entering culling games...")
                 task.wait(1)
                 enterCullingGames()
                 lastReEntry = now
             end
-            
             if now - lastReEntry > CONFIG.ReEntryDelay then
                 print("Fallback re-entry triggered...")
+                logMessage("Fallback re-entry triggered...")
                 enterCullingGames()
                 lastReEntry = now
             end
-            
             inCullingPreviously = currentlyInCulling
-            
             if currentlyInCulling and not inCullingPreviously then
                 task.wait(CONFIG.GameLoadTime)
             end
@@ -256,11 +360,13 @@ local function gameStateManager()
     end
 end
 
+-- ---------------------------
+-- Main execution
+-- ---------------------------
 task.spawn(function()
     task.wait(1)
     antiAFK()
 end)
-
 task.spawn(function()
     task.wait(1)
     gameStateManager()
